@@ -1,0 +1,7 @@
+[MESSAGES CONTROL]
+enable=c
+disable=e,w,r,f,C0111,C0103,C1001
+
+[REPORTS]
+include-ids=yes
+reports=no
