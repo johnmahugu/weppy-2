@@ -3,6 +3,3 @@ DEBUG = True
 
 # list of controller modules
 CONTROLLERS = []
-
-# list of extensions
-EXTENSIONS = []

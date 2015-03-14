@@ -1,95 +1,87 @@
 import unittest
-
-from weppy.handler import RequestHandler, ErrorHandler, url
+from weppy.handler import *
 from weppy.http import *
 
-@url('/', 'handler')
-class RequestHandlerA:
-    def get(self, request):
+### Handlers ###
+
+@url('/')
+class RootHandler:
+    def get(self, req):
         return HTTPResponse('get')
 
-    def post(self, request):
+    def post(self, req):
         return HTTPResponse('post')
 
-class ErrorHandlerA(ErrorHandler):
-    def error404(self, http_error):
-        return HTTPResponse('404', status=http_error.status)
+@url('/one/_/')
+class OneArgHandler:
+    def get(self, req, one):
+        return HTTPResponse('%s' % one)
 
-    def error5xx(self, http_error):
-        return HTTPResponse('5xx', status=http_error.status)
+@url('/two/_/_/')
+class TwoArgsHandler:
+    def get(self, req, one, two):
+        return HTTPResponse('%s, %s' % (one, two))
 
-    def error(self, http_error):
-        return HTTPResponse('error', status=http_error.status)
+### Tests ###
 
-class RequestHandlerTest(unittest.TestCase):
-    def setUp(self):
-        self.handler = RequestHandlerA
+class HandlerTest(unittest.TestCase):
+    def test_url_regex(self):
+        self.assertEqual(RootHandler._url_regex.pattern, r'^\/$')
+        self.assertEqual(OneArgHandler._url_regex.pattern, r'^\/one\/([^/]+)\/$')
+        self.assertEqual(TwoArgsHandler._url_regex.pattern, r'^\/two\/([^/]+)\/([^/]+)\/$')
 
-    def test_init(self):
-        self.assertEqual(self.handler.url_pattern, '/')
-        self.assertEqual(self.handler.handler_name, 'handler')
-
-    def test_call(self):
-        res = self.handler(HTTPRequest.get())
+    def test_get(self):
+        res = RootHandler(HTTPRequest.get())
         self.assertEqual(res.text, 'get')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.content_type, 'text/html')
         self.assertEqual(res.charset, 'UTF-8')
 
-        res = self.handler(HTTPRequest.post())
+        res = OneArgHandler(HTTPRequest.get(), 'one')
+        self.assertEqual(res.text, 'one')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
+
+        res = TwoArgsHandler(HTTPRequest.get(), 'one', 'two')
+        self.assertEqual(res.text, 'one, two')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
+
+    def test_post(self):
+        res = RootHandler(HTTPRequest.post())
         self.assertEqual(res.text, 'post')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.content_type, 'text/html')
         self.assertEqual(res.charset, 'UTF-8')
 
-        res = self.handler(HTTPRequest.head())
+    def test_head(self):
+        res = RootHandler(HTTPRequest.head())
         self.assertEqual(res.text, '')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.content_type, 'text/html')
         self.assertEqual(res.charset, 'UTF-8')
 
-        self.assertRaises(HTTPMethodNotAllowed, self.handler, HTTPRequest.put())
+        res = OneArgHandler(HTTPRequest.head(), 'one')
+        self.assertEqual(res.text, '')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
 
-class ErrorHandlerTest(unittest.TestCase):
-    def test_call(self):
-        handler = ErrorHandlerA()
+        res = TwoArgsHandler(HTTPRequest.head(), 'one', 'two')
+        self.assertEqual(res.text, '')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
 
-        res = handler(HTTPMethodNotAllowed())
-        self.assertEqual(res.status, '405 Method Not Allowed')
-        self.assertEqual(res.text, 'error')
+    def test_method_not_allowed(self):
+        self.assertRaises(HTTPMethodNotAllowed, RootHandler, HTTPRequest.put())
+        self.assertRaises(HTTPMethodNotAllowed, RootHandler, HTTPRequest.delete())
 
-        res = handler(HTTPNotFound())
-        self.assertEqual(res.status, '404 Not Found')
-        self.assertEqual(res.text, '404')
-
-        res = handler(HTTPInternalServerError())
-        self.assertEqual(res.status, '500 Internal Server Error')
-        self.assertEqual(res.text, '5xx')
-
-class urlDecoratorTest(unittest.TestCase):
+class urlTest(unittest.TestCase):
     def test_decorator(self):
-        self.assertTrue(isinstance(RequestHandlerA, RequestHandler))
-
-        res = RequestHandlerA(HTTPRequest.get())
-        self.assertEqual(res.text, 'get')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.content_type, 'text/html')
-        self.assertEqual(res.charset, 'UTF-8')
-
-        res = RequestHandlerA(HTTPRequest.post())
-        self.assertEqual(res.text, 'post')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.content_type, 'text/html')
-        self.assertEqual(res.charset, 'UTF-8')
-
-        res = RequestHandlerA(HTTPRequest.head())
-        self.assertEqual(res.text, '')
-        self.assertEqual(res.status, '200 OK')
-        self.assertEqual(res.content_type, 'text/html')
-        self.assertEqual(res.charset, 'UTF-8')
-
-        self.assertRaises(HTTPMethodNotAllowed, RequestHandlerA,
-                          HTTPRequest.put())
+        self.assertTrue(isinstance(RootHandler, Handler))
 
 if __name__ == '__main__':
     unittest.main()

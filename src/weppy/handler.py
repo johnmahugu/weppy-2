@@ -1,82 +1,43 @@
+import re
 from weppy.http import *
 
-class RequestHandler:
+class Handler(object):
     """
-    Handles requests.
+    Handle requests.
     """
 
-    def __init__(self, url_pattern, handler_name=None):
-        """
-        url_pattern -- str that specifies the URL pattern of the handler.
-        handler_name -- str that identifies the handler. None by default.
-        """
-        self.url_pattern = url_pattern
-        self.handler_name = handler_name
+    def __init__(self, url_pattern):
+        self._url_regex = re.compile(r'^%s$' % re.escape(url_pattern).replace('\_', '([^/]+)'))
 
-    def __call__(self, request, *args):
+    def __call__(self, req, *args):
         """
-        Processes the request with the correct method.
-
-        request -- HTTPRequest instance.
-        args -- URL parameters.
+        Call the appropriate handler method and return an HTTPResponse, or raise an
+        HTTPMethodNotAllowed exception if it does not exist.
         """
-        http_method = request.method.lower()
+        http_method = req.method.lower()
         if http_method == 'head':
             http_method = 'get'
         try:
             handler_method = getattr(self, http_method)
         except:
             raise HTTPMethodNotAllowed()
-        response = handler_method(request, *args)
-        if request.method.lower() == 'head':
-            response = HTTPResponse('', response.status, response.content_type,
-                                    response.charset, response.headerlist)
-        return response
+        res = handler_method(req, *args)
+        if req.method.lower() == 'head':
+            res = HTTPResponse('', res.status, res.content_type, res.charset, res.headerlist)
+        return res
 
-class ErrorHandler:
+class url(object):
     """
-    Handles HTTPErrors.
-    """
-
-    def error(self, http_error):
-        """
-        Returns a default HTTPResponse.
-
-        http_error -- HTTPError instance.
-        """
-        return HTTPResponse(str(http_error), status=http_error.status)
-
-    def __call__(self, http_error):
-        """
-        Processes the HTTPError with the correct method.
-
-        http_error -- HTTPError instance.
-        """
-        http_error_status = str(http_error.status)
-        if hasattr(self, 'error%s' % http_error_status):
-            handler_method = getattr(self, 'error%s' % http_error_status)
-        elif hasattr(self, 'error%sxx' % http_error_status[0]):
-            handler_method = getattr(self, 'error%sxx' % http_error_status[0])
-        else:
-            handler_method = self.error
-        return handler_method(http_error)
-
-class url:
-    """
-    @url decorator that turns a class into a RequestHandler.
+    Decorator to turn a class into a Handler instance.
     """
 
-    def __init__(self, url_pattern, handler_name=None):
-        """
-        url_pattern -- str that specifies the URL pattern of the handler.
-        handler_name -- str that identifies the handler. None by default.
-        """
-        self.url_pattern = url_pattern
-        self.handler_name = handler_name
+    def __init__(self, url_pattern):
+        self._url_pattern = url_pattern
 
     def __call__(self, cls):
         """
-        cls -- class that is decorated by @url.
+        Return an instance of a new type inherited from Handler and with the decorated class
+        methods.
         """
-        request_handler = type('handler', (RequestHandler,), dict(cls.__dict__))
-        return request_handler(self.url_pattern, self.handler_name)
+        handler = type('handler', (Handler,), dict(cls.__dict__))
+        return handler(self._url_pattern)

@@ -29,7 +29,7 @@ endef
 
 # $(call run_pylint,cmd)
 define run_pylint
-$(eval RET := $(shell pylint --rcfile=.pylintrc $1 2> /dev/null; echo $$?))
+$(eval RET := $(shell pylint --max-line-length=95 --rcfile=.pylintrc $1 2> /dev/null; echo $$?))
 $(eval $(call pylint_judge,$1,$(RET)))
 @echo $(expression)
 endef
@@ -44,7 +44,7 @@ endef
 all: setUp pylint unit_test integration_test coverage tearDown
 
 setUp:
-	weppy_admin.py runserver -P tests/integration_tests/src 2> /dev/null &
+	python scripts/weppy_admin.py runserver -P tests/integration_tests/src 2> /dev/null &
 
 pylint:
 	$(info ==================================== Pylint ====================================)
@@ -65,6 +65,7 @@ integration_test:
 coverage:
 	$(info =================================== Coverage ===================================)
 	$(foreach one, $(unit_test_modules), $(call run_coverage,$(one)))
+	$(foreach one, $(integration_test_modules), $(call run_coverage,$(one)))
 	coverage report
 	coverage erase
 	@echo ""

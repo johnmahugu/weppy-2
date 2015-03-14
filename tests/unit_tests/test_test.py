@@ -1,64 +1,70 @@
 import unittest
-
-from weppy.batteries.test import Client
-from weppy.handler import url
+from weppy.test import *
+from weppy.handler import *
 from weppy.http import *
-from weppy.wsgi import WSGIApplication
+from weppy.wsgi import *
 
-@url('/a/', 'handler_a')
-class RequestHandlerA:
-    def get(self, request):
-        return HTTPResponse('get')
+### Handlers ###
 
-    def post(self, request):
-        return HTTPResponse('post')
-
-    def put(self, request):
-        return HTTPResponse('put')
-
-    def delete(self, request):
-        return HTTPResponse('delete')
-
-@url('/b/', 'handler_b')
-class RequestHandlerB:
-    def post(self, request):
-        res = HTTPResponse(request.cookies.get('content', ''))
-        res.set_cookie('content', request.POST.get('content', ''))
+@url('/')
+class RootHandler:
+    def get(self, req):
+        res = HTTPResponse('get, %s' % req.cookies.get('method', ''))
+        res.set_cookie('method', 'get')
         return res
+
+    def post(self, req):
+        res = HTTPResponse('post, %s' % req.cookies.get('method', ''))
+        res.set_cookie('method', 'post')
+        return res
+
+    def put(self, req):
+        res = HTTPResponse('put, %s' % req.cookies.get('method', ''))
+        res.set_cookie('method', 'put')
+        return res
+
+    def delete(self, req):
+        res = HTTPResponse('delete, %s' % req.cookies.get('method', ''))
+        res.set_cookie('method', 'delete')
+        return res
+
+### Tests ###
 
 class ClientTest(unittest.TestCase):
     def setUp(self):
         app = WSGIApplication(True)
-        app.add_request_handler(RequestHandlerA)
-        app.add_request_handler(RequestHandlerB)
+        app.add_handler(RootHandler)
         self.client = Client(app)
 
     def test_get(self):
-        res = self.client.get('/a/')
-        self.assertEqual(res.text, 'get')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, ')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, get')
 
     def test_post(self):
-        res = self.client.post('/a/')
-        self.assertEqual(res.text, 'post')
+        res = self.client.post('/')
+        self.assertEqual(res.text, 'post, ')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, post')
 
     def test_put(self):
-        res = self.client.put('/a/')
-        self.assertEqual(res.text, 'put')
+        res = self.client.put('/')
+        self.assertEqual(res.text, 'put, ')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, put')
 
     def test_delete(self):
-        res = self.client.delete('/a/')
-        self.assertEqual(res.text, 'delete')
+        res = self.client.delete('/')
+        self.assertEqual(res.text, 'delete, ')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, delete')
 
     def test_head(self):
-        res = self.client.head('/a/')
+        res = self.client.head('/')
         self.assertEqual(res.text, '')
-
-    def test_cookie_processing(self):
-        res = self.client.post('/b/', {'content': 'abc'})
-        self.assertEqual(res.text, '')
-
-        res = self.client.post('/b/')
-        self.assertEqual(res.text, 'abc')
+        res = self.client.get('/')
+        self.assertEqual(res.text, 'get, get')
 
 if __name__ == '__main__':
     unittest.main()
