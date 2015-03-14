@@ -4,6 +4,8 @@ from weppy.handler import *
 from weppy.http import *
 from weppy.wsgi import *
 
+### Handlers ###
+
 @url('/')
 class RootHandler:
     def get(self, req):
@@ -24,6 +26,8 @@ class ArgHandler:
 class ErrorHandler:
     def get(self, req):
         return HTTPResponse('%s' % 1 / 0)
+
+### Tests ###
 
 class WSGIApplicationTest(unittest.TestCase):
     def setUp(self):
