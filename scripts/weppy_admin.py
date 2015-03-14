@@ -17,7 +17,7 @@ def runserver(args):
 
 def startproject(args):
     """
-    Copy Weppy sample project structure to the current directory.
+    Copy weppy sample project structure to the current directory.
     """
     source = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'weppy_project')
     destination = os.path.join(os.getcwd(), args.name)
@@ -33,11 +33,11 @@ def main():
     runserver_parser.add_argument('-p', '--port', type=int, dest='port', default=8000,
                                   help='run server on the specified port')
     runserver_parser.add_argument('-P', '--path', type=str, dest='path', default='.',
-                                  help='path of Weppy project directory')
+                                  help='path of weppy project directory')
     runserver_parser.set_defaults(func=runserver)
     startproject_parser = subparsers.add_parser('startproject')
     startproject_parser.add_argument('name', default='src',
-                                     help='name of Weppy project directory')
+                                     help='name of weppy project directory')
     startproject_parser.set_defaults(func=startproject)
     args = parser.parse_args()
     args.func(args)

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='Weppy',
+    name='weppy',
     version='0.1',
     packages=['weppy'],
     package_dir={'': 'src'},
