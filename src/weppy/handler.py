@@ -22,6 +22,8 @@ class Handler(object):
         except:
             raise HTTPMethodNotAllowed()
         res = handler_method(req, *args)
+        if isinstance(res, str):
+            res = HTTPResponse(res)
         if req.method.lower() == 'head':
             res = HTTPResponse('', res.status, res.content_type, res.charset, res.headerlist)
         return res

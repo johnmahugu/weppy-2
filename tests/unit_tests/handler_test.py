@@ -22,6 +22,14 @@ class TwoArgsHandler:
     def get(self, req, one, two):
         return HTTPResponse('%s, %s' % (one, two))
 
+@url('/str/')
+class StrHandler:
+    def get(self, req):
+        return 'get'
+
+    def post(self, req):
+        return 'post'
+
 ### Tests ###
 
 class HandlerTest(unittest.TestCase):
@@ -49,8 +57,20 @@ class HandlerTest(unittest.TestCase):
         self.assertEqual(res.content_type, 'text/html')
         self.assertEqual(res.charset, 'UTF-8')
 
+        res = StrHandler(HTTPRequest.get())
+        self.assertEqual(res.text, 'get')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
+
     def test_post(self):
         res = RootHandler(HTTPRequest.post())
+        self.assertEqual(res.text, 'post')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
+
+        res = StrHandler(HTTPRequest.post())
         self.assertEqual(res.text, 'post')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.content_type, 'text/html')
@@ -70,6 +90,12 @@ class HandlerTest(unittest.TestCase):
         self.assertEqual(res.charset, 'UTF-8')
 
         res = TwoArgsHandler(HTTPRequest.head(), 'one', 'two')
+        self.assertEqual(res.text, '')
+        self.assertEqual(res.status, '200 OK')
+        self.assertEqual(res.content_type, 'text/html')
+        self.assertEqual(res.charset, 'UTF-8')
+
+        res = StrHandler(HTTPRequest.head())
         self.assertEqual(res.text, '')
         self.assertEqual(res.status, '200 OK')
         self.assertEqual(res.content_type, 'text/html')
