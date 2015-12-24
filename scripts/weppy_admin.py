@@ -17,23 +17,15 @@ def runserver(args):
 
 def startproject(args):
     """
-    Copy weppy sample project structure to the current directory.
+    Copy sample project structure to the current directory.
     """
     source = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'weppy_project')
     destination = os.path.join(os.getcwd(), args.name)
     call('cp -R %s %s' % (source, destination), shell=True)
 
-def startgaeproject(args):
-    """
-    Copy weppy sample GAE project structure to the current directory.
-    """
-    source = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'weppy_gae_project')
-    destination = os.path.join(os.getcwd(), args.name)
-    call('cp -R %s %s' % (source, destination), shell=True)
-
 def main():
     """
-    Parse arguments and run the specified action or show help text.
+    Parse arguments and run the specified action or show text for help.
     """
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -46,14 +38,8 @@ def main():
     runserver_parser.set_defaults(func=runserver)
 
     startproject_parser = subparsers.add_parser('startproject')
-    startproject_parser.add_argument('name', default='src',
-                                     help='name of weppy project directory')
+    startproject_parser.add_argument('name', default='src', help='name of project directory')
     startproject_parser.set_defaults(func=startproject)
-
-    startgaeproject_parser = subparsers.add_parser('startgaeproject')
-    startgaeproject_parser.add_argument('name', default='src',
-                                        help='name of GAE weppy project directory')
-    startgaeproject_parser.set_defaults(func=startgaeproject)
 
     args = parser.parse_args()
     args.func(args)

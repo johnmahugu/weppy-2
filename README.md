@@ -1,2 +1,2 @@
 # weppy
-A lightweight Python web framework that encourages clean design.
+A lightweight web framework compatible with Google App Engine.

@@ -34,14 +34,9 @@ $(eval $(call pylint_judge,$1,$(RET)))
 @echo $(expression)
 endef
 
-# $(call run_coverage,cmd)
-define run_coverage
-$(shell coverage run -a --source=src/weppy $1 2> /dev/null)
-endef
+.PHONY: all pylint integration_test unit_test
 
-.PHONY: all pylint integration_test unit_test coverage
-
-all: setUp pylint unit_test integration_test coverage tearDown
+all: setUp pylint unit_test integration_test tearDown
 
 setUp:
 	python scripts/weppy_admin.py runserver -P tests/integration_tests/src 2> /dev/null &
@@ -60,14 +55,6 @@ unit_test:
 integration_test:
 	$(info ============================== Integration tests ===============================)
 	$(foreach one, $(integration_test_modules), $(call run_test,$(one)))
-	@echo ""
-
-coverage:
-	$(info =================================== Coverage ===================================)
-	$(foreach one, $(unit_test_modules), $(call run_coverage,$(one)))
-	$(foreach one, $(integration_test_modules), $(call run_coverage,$(one)))
-	coverage report
-	coverage erase
 	@echo ""
 
 tearDown:
